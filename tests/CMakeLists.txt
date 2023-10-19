@@ -43,17 +43,17 @@ target_compile_options(
 target_link_libraries(${PROJECT_NAME} check)
 add_dependencies(${PROJECT_NAME} check_project)
 
-# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
-# set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 
 enable_testing()
 add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
 
-# add_custom_target(coverage
-#     COMMAND ${CMAKE_MAKE_PROGRAM} test
-#     COMMAND lcov --directory . --capture --output-file coverage.info --ignore-errors version
-#     COMMAND lcov --remove coverage.info '/usr/*' --output-file coverage.info
-#     COMMAND genhtml coverage.info --output-directory coverage
-#     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-#     COMMENT "Generating code coverage report"
-# )
+add_custom_target(coverage
+    COMMAND ${CMAKE_MAKE_PROGRAM} test
+    COMMAND lcov --directory . --capture --output-file coverage.info --ignore-errors version
+    COMMAND lcov --remove coverage.info '/usr/*' --output-file coverage.info
+    COMMAND genhtml coverage.info --output-directory coverage
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Generating code coverage report"
+)

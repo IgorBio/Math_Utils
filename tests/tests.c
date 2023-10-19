@@ -11,9 +11,9 @@ double rand_double(double low, double high) {
   return low + (double)rand() / RAND_MAX * (high - low);
 }
 
-double test_cases[15] = {
-    MU_PI,      MU_EPS20, MU_LN10, MU_E,      MU_SQRT2,     MU_SQRT3, MU_SQRT5,
-    MU_CATALAN, MU_CAHEN, MU_LN2,  MU_GOLDEN, MU_REVGOLDEN, 0.0,      -0.0};
+double test_cases[15] = {MU_PI,    MU_EPS20, MU_LN10,    MU_E,     MU_SQRT2,
+                         MU_SQRT3, MU_SQRT5, MU_CATALAN, MU_CAHEN, MU_LN2,
+                         MU_PHI,   MU_1_PHI, 0.0,        -0.0};
 
 START_TEST(test_mu_abs) {
   for (int x = -10000; x < 10000; ++x) {
