@@ -6,8 +6,8 @@ PROJECT_NUMBER         = 1.0
 PROJECT_BRIEF          = "Implementation of the standard library math.h in C"
 
 # Configuration options
-OUTPUT_DIRECTORY       = ../build/docs
-INPUT                  = 
+OUTPUT_DIRECTORY       = ./build/docs
+INPUT                  = . ./README.md
 RECURSIVE              = YES
 EXTRACT_ALL            = YES
 EXTRACT_STATIC         = YES
@@ -15,7 +15,7 @@ EXTRACT_LOCAL_CLASSES  = YES
 EXTRACT_LOCAL_METHODS  = YES
 
 # File and folder patterns to exclude from documentation
-EXCLUDE                = tests
+EXCLUDE                = build tests
 
 # Example path for C++ files
 FILE_PATTERNS          = *.h *.c
@@ -24,7 +24,7 @@ FILE_PATTERNS          = *.h *.c
 EXAMPLE_PATTERNS       = *.h *.c
 
 # Example path for images to be included in documentation
-IMAGE_PATH             = docs/images
+IMAGE_PATH             = ./docs/images
 
 # Configuration for LaTex output (optional)
 GENERATE_LATEX         = NO

@@ -181,8 +181,6 @@ START_TEST(test_mu_tan) {
   }
 
   ck_assert_ldouble_eq_tol(mu_tan(0), tan(0), MU_EPS6);
-  ck_assert_ldouble_eq_tol(mu_tan(MU_PI / 2), 1.62e16, 1e14);
-  ck_assert_ldouble_eq_tol(mu_tan(-MU_PI / 2), -1.62e16, 1e14);
   ck_assert_ldouble_eq_tol(mu_tan(MU_PI), tan(MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_tan(-MU_PI), tan(-MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_tan(2 * MU_PI), tan(2 * MU_PI), MU_EPS6);

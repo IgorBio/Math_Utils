@@ -20,6 +20,11 @@ build:
 
 rebuild: clean build
 
+dvi:
+	@mkdir -p ../build/docs
+	@doxygen ./docs/Doxyfile
+	@$(OPEN) $(BUILD_DIR)/docs/html/index.html
+
 cppcheck:
 	@cmake --build $(BUILD_DIR) --target cppcheck
 
@@ -33,11 +38,12 @@ tests:
 
 gcov_report: tests
 	@cmake --build $(TEST_BUILD_DIR) --target coverage
+	@$(OPEN) $(TEST_BUILD_DIR)/coverage/index.html
 
 leaks: tests
 	@$(CHECK_LEAKS) $(RUN_TEST)
 
 clean:
-	@rm -rf $(BUILD_DIR)
+	@rm -rf $(BUILD_DIR) *.log
 
-.PHONY: all build rebuild clean cppcheck style tests lcov
+.PHONY: all build rebuild cppcheck style tests gcov_report leaks clean

@@ -3,6 +3,8 @@ project(MathUtilsTests)
 
 set(CMAKE_C_STANDARD 11)
 
+find_library(MATH_LIBRARY m)
+
 include(ExternalProject)
 
 set(CHECK_INSTALL_DIR ${CMAKE_BINARY_DIR}/extern)
@@ -41,6 +43,9 @@ target_compile_options(
 )
 
 target_link_libraries(${PROJECT_NAME} check)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_link_libraries(${PROJECT_NAME} subunit rt pthread m)
+endif()
 add_dependencies(${PROJECT_NAME} check_project)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fprofile-arcs -ftest-coverage")
@@ -51,7 +56,7 @@ add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
 
 add_custom_target(coverage
     COMMAND ${CMAKE_MAKE_PROGRAM} test
-    COMMAND lcov --directory . --capture --output-file coverage.info --ignore-errors version
+    COMMAND lcov --directory . --capture --output-file coverage.info
     COMMAND lcov --remove coverage.info '/usr/*' --output-file coverage.info
     COMMAND genhtml coverage.info --output-directory coverage
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}

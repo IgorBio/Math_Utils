@@ -5,22 +5,10 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-set(HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/math_utils.h
-)
-
-set(SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/math_utils.c
-)
-
-set(BUILD_FILES
-  ${HEADERS}
-  ${SOURCES}
-)
-
 add_library(${PROJECT_NAME}
   STATIC
-  ${BUILD_FILES}
+  ${CMAKE_CURRENT_SOURCE_DIR}/math_utils.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/math_utils.c
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
