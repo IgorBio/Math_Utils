@@ -1,19 +1,22 @@
 cmake_minimum_required(VERSION 3.13)
-project(MathUtils VERSION 1.0 LANGUAGES C)
+project(MathUtils)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_EXTENSIONS OFF)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-add_library(${PROJECT_NAME}
-  STATIC
+set(HEADERS 
   ${CMAKE_CURRENT_SOURCE_DIR}/math_utils.h
+)
+
+set(SOURCES 
   ${CMAKE_CURRENT_SOURCE_DIR}/math_utils.c
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "")
-set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME ${CMAKE_PROJECT_NAME})
-set_target_properties(${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/lib)
+add_library(${PROJECT_NAME} STATIC ${HEADERS} ${SOURCES})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/lib"
+)
 
 target_compile_options(
   ${PROJECT_NAME}
@@ -22,14 +25,11 @@ target_compile_options(
   -Werror
   -Wextra
   -Wpedantic
-  -fsanitize=address
+  -std=c11
+  -D_GNU_SOURCE
 )
 
-target_link_libraries(
-  ${PROJECT_NAME}
-  PRIVATE
-  -fsanitize=address
-)
+target_link_libraries(${PROJECT_NAME} PRIVATE m)
 
 find_program(CPPCHECK cppcheck)
 if(CPPCHECK)
@@ -45,7 +45,7 @@ if(CPPCHECK)
   )
   add_custom_target(
     cppcheck
-    COMMAND ${CPPCHECK} ${CPPCHECK_ARGS} ${BUILD_FILES}
+    COMMAND ${CPPCHECK} ${CPPCHECK_ARGS} ${HEADERS} ${SOURCES}
   )
 else()
   message(STATUS "cppcheck not found")
@@ -56,7 +56,7 @@ if(CLANG_FORMAT)
   message(STATUS "clang-format found: ${CLANG_FORMAT}")
   add_custom_target(
     clang-format
-    COMMAND ${CLANG_FORMAT} -i --verbose -style=Google ${BUILD_FILES}
+    COMMAND ${CLANG_FORMAT} -i --verbose -style=Google ${HEADERS} ${SOURCES}
   )
 else()
   message(STATUS "clang-format not found")

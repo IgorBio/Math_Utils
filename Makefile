@@ -25,10 +25,10 @@ dvi:
 	@doxygen ./docs/Doxyfile
 	@$(OPEN) $(BUILD_DIR)/docs/html/index.html
 
-cppcheck:
+cppcheck: build
 	@cmake --build $(BUILD_DIR) --target cppcheck
 
-style:
+style: build
 	@cmake --build $(BUILD_DIR) --target clang-format
 
 tests:
