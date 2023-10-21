@@ -5,15 +5,61 @@
 
 #include "math_utils.h"
 
-void init_random() { srand((unsigned int)time(NULL)); }
-
-double rand_double(double low, double high) {
-  return low + (double)rand() / RAND_MAX * (high - low);
+void run_range_tests(long double (*mu_func)(double), double (*std_func)(double),
+                     double start, double end, double step, double tolerance) {
+  for (double x = start; x < end; x += step) {
+    ck_assert_ldouble_eq_tol(mu_func(x), std_func(x), tolerance);
+  }
 }
 
-double test_cases[15] = {MU_PI,    MU_EPS20, MU_LN10,    MU_E,     MU_SQRT2,
-                         MU_SQRT3, MU_SQRT5, MU_CATALAN, MU_CAHEN, MU_LN2,
-                         MU_PHI,   MU_1_PHI, 0.0,        -0.0};
+void run_const_tests(long double (*mu_func)(double), double (*std_func)(double),
+                     double tolerance) {
+  double constants[] = {MU_PI,    MU_LN10,  MU_E,       MU_SQRT2,
+                        MU_SQRT3, MU_SQRT5, MU_CATALAN, MU_CAHEN,
+                        MU_LN2,   MU_PHI,   MU_1_PHI};
+
+  for (size_t i = 0; i < sizeof(constants) / sizeof(constants[0]); ++i) {
+    ck_assert_ldouble_eq_tol(mu_func(constants[i]), std_func(constants[i]),
+                             tolerance);
+  }
+}
+
+void run_random_tests(long double (*mu_func)(double),
+                      double (*std_func)(double), double low, double high,
+                      double tolerance) {
+  srand((unsigned int)time(NULL));
+  for (int i = 0; i < 1000; ++i) {
+    double x = low + (double)random() / RAND_MAX * (high - low);
+    ck_assert_ldouble_eq_tol(mu_func(x), std_func(x), tolerance);
+  }
+}
+
+void run_const_tests_2args(long double (*mu_func)(double, double),
+                           double (*std_func)(double, double),
+                           double tolerance) {
+  double constants[] = {MU_PI,    MU_LN10,  MU_E,       MU_SQRT2,
+                        MU_SQRT3, MU_SQRT5, MU_CATALAN, MU_CAHEN,
+                        MU_LN2,   MU_PHI,   MU_1_PHI};
+
+  for (size_t i = 0; i < sizeof(constants) / sizeof(constants[0]); ++i) {
+    for (size_t j = 0; j < sizeof(constants) / sizeof(constants[0]); ++j) {
+      ck_assert_ldouble_eq_tol(mu_func(constants[i], constants[j]),
+                               std_func(constants[i], constants[j]), tolerance);
+    }
+  }
+}
+
+void run_random_tests_2args(long double (*mu_func)(double, double),
+                            double (*std_func)(double, double), double low1,
+                            double high1, double low2, double high2,
+                            double tolerance) {
+  srand((unsigned int)time(NULL));
+  for (int i = 0; i < 1000; ++i) {
+    double x = low1 + (double)random() / RAND_MAX * (high1 - low1);
+    double y = low2 + (double)random() / RAND_MAX * (high2 - low2);
+    ck_assert_ldouble_eq_tol(mu_func(x, y), std_func(x, y), tolerance);
+  }
+}
 
 START_TEST(test_mu_abs) {
   for (int x = -10000; x < 10000; ++x) {
@@ -28,18 +74,9 @@ START_TEST(test_mu_abs) {
 END_TEST
 
 START_TEST(test_mu_fabs) {
-  for (double x = -1000.0; x < 1000.0; x += 0.1) {
-    ck_assert_ldouble_eq(mu_fabs(x), fabs(x));
-  }
-
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq(mu_fabs(test_cases[i]), fabs(test_cases[i]));
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-MU_E10, MU_E10);
-    ck_assert_ldouble_eq(mu_fabs(x), fabs(x));
-  }
+  run_range_tests(mu_fabs, fabs, -1000.0, 1000.0, 0.1, MU_EPS6);
+  run_const_tests(mu_fabs, fabs, MU_EPS6);
+  run_random_tests(mu_fabs, fabs, -MU_E10, MU_E10, MU_EPS6);
 
   ck_assert_ldouble_nan(mu_fabs(MU_NAN));
   ck_assert_ldouble_eq(mu_fabs(MU_INF), fabs(MU_INF));
@@ -48,14 +85,9 @@ START_TEST(test_mu_fabs) {
 END_TEST
 
 START_TEST(test_mu_trunc) {
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq(mu_trunc(test_cases[i]), trunc(test_cases[i]));
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-MU_E10, MU_E10);
-    ck_assert_ldouble_eq(mu_trunc(x), trunc(x));
-  }
+  run_range_tests(mu_trunc, trunc, -1000.0, 1000.0, 0.1, MU_EPS6);
+  run_const_tests(mu_trunc, trunc, MU_EPS6);
+  run_random_tests(mu_trunc, trunc, -MU_E10, MU_E10, MU_EPS6);
 
   ck_assert_ldouble_nan(mu_trunc(MU_NAN));
   ck_assert_ldouble_eq(mu_trunc(MU_INF), trunc(MU_INF));
@@ -64,14 +96,9 @@ START_TEST(test_mu_trunc) {
 END_TEST
 
 START_TEST(test_mu_ceil) {
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq(mu_ceil(test_cases[i]), ceil(test_cases[i]));
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-MU_E10, MU_E10);
-    ck_assert_ldouble_eq(mu_ceil(x), ceil(x));
-  }
+  run_range_tests(mu_ceil, ceil, -1000.0, 1000.0, 0.1, MU_EPS6);
+  run_const_tests(mu_ceil, ceil, MU_EPS6);
+  run_random_tests(mu_ceil, ceil, -MU_E10, MU_E10, MU_EPS6);
 
   ck_assert_ldouble_nan(mu_ceil(MU_NAN));
   ck_assert_ldouble_eq(mu_ceil(MU_INF), ceil(MU_INF));
@@ -80,14 +107,9 @@ START_TEST(test_mu_ceil) {
 END_TEST
 
 START_TEST(test_mu_floor) {
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq(mu_floor(test_cases[i]), floor(test_cases[i]));
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-MU_E10, MU_E10);
-    ck_assert_ldouble_eq(mu_floor(x), floor(x));
-  }
+  run_range_tests(mu_floor, floor, -1000.0, 1000.0, 0.1, MU_EPS6);
+  run_const_tests(mu_floor, floor, MU_EPS6);
+  run_random_tests(mu_floor, floor, -MU_E10, MU_E10, MU_EPS6);
 
   ck_assert_ldouble_nan(mu_floor(MU_NAN));
   ck_assert_ldouble_eq(mu_floor(MU_INF), floor(MU_INF));
@@ -96,13 +118,12 @@ START_TEST(test_mu_floor) {
 END_TEST
 
 START_TEST(test_mu_fmod) {
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-MU_E10, MU_E10);
-    double y = rand_double(-MU_E10, MU_E10);
-    ck_assert_ldouble_eq_tol(mu_fmod(x, y), fmod(x, y), MU_EPS6);
-  }
+  run_const_tests_2args(mu_fmod, fmod, MU_EPS6);
+  run_random_tests_2args(mu_fmod, fmod, -MU_E10, MU_E10, -MU_E10, MU_E10,
+                         MU_EPS6);
 
   ck_assert_ldouble_eq_tol(mu_fmod(MU_PI, MU_E), fmod(MU_PI, MU_E), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_fmod(MU_E, MU_PI), fmod(MU_E, MU_PI), MU_EPS6);
 
   ck_assert_ldouble_nan(mu_fmod(MU_INF, MU_INF));
   ck_assert_ldouble_nan(mu_fmod(MU_INF, 0.0));
@@ -118,27 +139,17 @@ START_TEST(test_mu_fmod) {
 END_TEST
 
 START_TEST(test_mu_sin) {
-  for (double x = -1000.0; x < 1000.0; x += 0.1) {
-    ck_assert_ldouble_eq_tol(mu_sin(x), sin(x), MU_EPS6);
-  }
+  run_range_tests(mu_sin, sin, -1000.0, 1000.0, 0.1, MU_EPS6);
+  run_const_tests(mu_sin, sin, MU_EPS6);
+  run_random_tests(mu_sin, sin, -MU_E10, MU_E10, MU_EPS6);
 
-  ck_assert_ldouble_eq_tol(mu_sin(0), sin(0), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_sin(0.0), sin(0.0), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_sin(MU_PI / 2), sin(MU_PI / 2), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_sin(-MU_PI / 2), sin(-MU_PI / 2), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_sin(MU_PI), sin(MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_sin(-MU_PI), sin(-MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_sin(2 * MU_PI), sin(2 * MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_sin(-2 * MU_PI), sin(-2 * MU_PI), MU_EPS6);
-
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq_tol(mu_sin(test_cases[i]), sin(test_cases[i]),
-                             MU_EPS6);
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-2 * MU_PI, 2 * MU_PI);
-    ck_assert_ldouble_eq_tol(mu_sin(x), sin(x), MU_EPS6);
-  }
 
   ck_assert_ldouble_nan(mu_sin(MU_NAN));
   ck_assert_ldouble_nan(mu_sin(MU_INF));
@@ -147,9 +158,9 @@ START_TEST(test_mu_sin) {
 END_TEST
 
 START_TEST(test_mu_cos) {
-  for (double x = -1000.0; x < 1000.0; x += 0.1) {
-    ck_assert_ldouble_eq_tol(mu_cos(x), cos(x), MU_EPS6);
-  }
+  run_range_tests(mu_cos, cos, -1000.0, 1000.0, 0.1, MU_EPS6);
+  run_const_tests(mu_cos, cos, MU_EPS6);
+  run_random_tests(mu_cos, cos, -MU_E10, MU_E10, MU_EPS6);
 
   ck_assert_ldouble_eq_tol(mu_cos(0), cos(0), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_cos(MU_PI / 2), cos(MU_PI / 2), MU_EPS6);
@@ -159,16 +170,6 @@ START_TEST(test_mu_cos) {
   ck_assert_ldouble_eq_tol(mu_cos(2 * MU_PI), cos(2 * MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_cos(-2 * MU_PI), cos(-2 * MU_PI), MU_EPS6);
 
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq_tol(mu_cos(test_cases[i]), cos(test_cases[i]),
-                             MU_EPS6);
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-2 * MU_PI, 2 * MU_PI);
-    ck_assert_ldouble_eq_tol(mu_cos(x), cos(x), MU_EPS6);
-  }
-
   ck_assert_ldouble_nan(mu_cos(MU_NAN));
   ck_assert_ldouble_nan(mu_cos(MU_INF));
   ck_assert_ldouble_nan(mu_cos(-MU_INF));
@@ -176,20 +177,15 @@ START_TEST(test_mu_cos) {
 END_TEST
 
 START_TEST(test_mu_tan) {
-  for (double x = -1.0; x < 1.0; x += 0.002) {
-    ck_assert_ldouble_eq_tol(mu_tan(x), tan(x), MU_EPS6);
-  }
+  run_range_tests(mu_tan, tan, -1.0, 1.0, 0.002, MU_EPS6);
+  run_const_tests(mu_tan, tan, MU_EPS6);
+  run_random_tests(mu_cos, cos, -1.0, 1.0, MU_EPS6);
 
   ck_assert_ldouble_eq_tol(mu_tan(0), tan(0), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_tan(MU_PI), tan(MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_tan(-MU_PI), tan(-MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_tan(2 * MU_PI), tan(2 * MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_tan(-2 * MU_PI), tan(-2 * MU_PI), MU_EPS6);
-
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq_tol(mu_tan(test_cases[i]), tan(test_cases[i]),
-                             MU_EPS6);
-  }
 
   ck_assert_ldouble_nan(mu_tan(MU_NAN));
   ck_assert_ldouble_nan(mu_tan(MU_INF));
@@ -198,20 +194,22 @@ START_TEST(test_mu_tan) {
 END_TEST
 
 START_TEST(test_mu_asin) {
-  for (double x = -1.0; x <= 1.0; x += 0.002) {
-    ck_assert_ldouble_eq_tol(mu_asin(x), asin(x), MU_EPS6);
-  }
+  run_range_tests(mu_asin, asin, -1.0, 1.0, 0.002, MU_EPS6);
+  run_random_tests(mu_asin, asin, -0.999, 0.999, MU_EPS6);
 
   ck_assert_ldouble_eq_tol(mu_asin(0.0), asin(0.0), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_asin(MU_LN2), asin(MU_LN2), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_asin(MU_1_PHI), asin(MU_1_PHI), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_asin(MU_CATALAN), asin(MU_CATALAN), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_asin(MU_CAHEN), asin(MU_CAHEN), MU_EPS6);
 
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    if (test_cases[i] >= -1 && test_cases[i] <= 1) {
-      ck_assert_ldouble_eq_tol(mu_asin(test_cases[i]), asin(test_cases[i]),
-                               MU_EPS6);
-    } else {
-      ck_assert_ldouble_nan(mu_asin(test_cases[i]));
-    }
-  }
+  ck_assert_ldouble_nan(mu_asin(MU_PI));
+  ck_assert_ldouble_nan(mu_asin(MU_E));
+  ck_assert_ldouble_nan(mu_asin(MU_LN10));
+  ck_assert_ldouble_nan(mu_asin(MU_PHI));
+  ck_assert_ldouble_nan(mu_asin(MU_SQRT2));
+  ck_assert_ldouble_nan(mu_asin(MU_SQRT3));
+  ck_assert_ldouble_nan(mu_asin(MU_SQRT5));
 
   ck_assert_ldouble_nan(mu_asin(MU_NAN));
   ck_assert_ldouble_nan(mu_asin(MU_INF));
@@ -220,20 +218,23 @@ START_TEST(test_mu_asin) {
 END_TEST
 
 START_TEST(test_mu_acos) {
-  for (double x = -1.0; x <= 1.0; x += 0.002) {
-    ck_assert_ldouble_eq_tol(mu_acos(x), acos(x), MU_EPS6);
-  }
+  run_range_tests(mu_acos, acos, -1.0, 1.0, 0.002, MU_EPS6);
+  run_random_tests(mu_acos, acos, -0.999, 0.999, MU_EPS6);
 
   ck_assert_ldouble_eq_tol(mu_acos(0.0), acos(0.0), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_acos(0.0), acos(0.0), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_acos(MU_LN2), acos(MU_LN2), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_acos(MU_1_PHI), acos(MU_1_PHI), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_acos(MU_CATALAN), acos(MU_CATALAN), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_acos(MU_CAHEN), acos(MU_CAHEN), MU_EPS6);
 
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    if (test_cases[i] >= -1 && test_cases[i] <= 1) {
-      ck_assert_ldouble_eq_tol(mu_acos(test_cases[i]), acos(test_cases[i]),
-                               MU_EPS6);
-    } else {
-      ck_assert_ldouble_nan(mu_acos(test_cases[i]));
-    }
-  }
+  ck_assert_ldouble_nan(mu_acos(MU_PI));
+  ck_assert_ldouble_nan(mu_acos(MU_E));
+  ck_assert_ldouble_nan(mu_acos(MU_LN10));
+  ck_assert_ldouble_nan(mu_acos(MU_PHI));
+  ck_assert_ldouble_nan(mu_acos(MU_SQRT2));
+  ck_assert_ldouble_nan(mu_acos(MU_SQRT3));
+  ck_assert_ldouble_nan(mu_acos(MU_SQRT5));
 
   ck_assert_ldouble_nan(mu_acos(MU_NAN));
   ck_assert_ldouble_nan(mu_acos(MU_INF));
@@ -242,9 +243,9 @@ START_TEST(test_mu_acos) {
 END_TEST
 
 START_TEST(test_mu_atan) {
-  for (double x = -10.0; x < 10.0; x += 0.1) {
-    ck_assert_ldouble_eq_tol(mu_atan(x), atan(x), MU_EPS6);
-  }
+  run_range_tests(mu_atan, atan, -10.0, 10.0, 0.1, MU_EPS6);
+  run_const_tests(mu_atan, atan, MU_EPS6);
+  run_random_tests(mu_atan, atan, -10.0, 10.0, MU_EPS6);
 
   ck_assert_ldouble_eq_tol(mu_atan(0.0), atan(0.0), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_atan(MU_PI / 2), atan(MU_PI / 2), MU_EPS6);
@@ -254,11 +255,6 @@ START_TEST(test_mu_atan) {
   ck_assert_ldouble_eq_tol(mu_atan(2 * MU_PI), atan(2 * MU_PI), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_atan(-2 * MU_PI), atan(-2 * MU_PI), MU_EPS6);
 
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq_tol(mu_atan(test_cases[i]), atan(test_cases[i]),
-                             MU_EPS6);
-  }
-
   ck_assert_ldouble_nan(mu_atan(MU_NAN));
   ck_assert_ldouble_eq_tol(mu_atan(MU_INF), atan(MU_INF), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_atan(-MU_INF), atan(-MU_INF), MU_EPS6);
@@ -266,35 +262,13 @@ START_TEST(test_mu_atan) {
 END_TEST
 
 START_TEST(test_mu_sqrt) {
-  for (double x = -10000.0; x < 10000.0; x += 10) {
-    if (x >= 0) {
-      ck_assert_ldouble_eq_tol(mu_sqrt(x), sqrt(x), MU_EPS6);
-    } else {
-      ck_assert_ldouble_nan(mu_sqrt(x));
-    }
-  }
+  run_range_tests(mu_sqrt, sqrt, 0.0, 10000.0, 10, MU_EPS6);
+  run_range_tests(mu_sqrt, sqrt, 0.0, 1.0, 0.001, MU_EPS6);
+  run_const_tests(mu_sqrt, sqrt, MU_EPS6);
+  run_random_tests(mu_sqrt, sqrt, 0.0, MU_E10, MU_EPS6);
 
-  for (double i = -1.0; i < 1.0; i += 0.001) {
-    if (i >= 0) {
-      ck_assert_ldouble_eq_tol(mu_sqrt(i), sqrt(i), MU_EPS6);
-    } else {
-      ck_assert_ldouble_nan(mu_sqrt(i));
-    }
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-MU_E10, MU_E10);
-    if (x >= 0)
-      ck_assert_ldouble_eq_tol(mu_sqrt(x), sqrt(x), MU_EPS6);
-    else
-      ck_assert_ldouble_nan(mu_sqrt(x));
-  }
-
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq_tol(mu_sqrt(test_cases[i]), sqrt(test_cases[i]),
-                             MU_EPS6);
-  }
-
+  ck_assert_ldouble_eq_tol(mu_sqrt(-0.0), sqrt(-0.0), MU_EPS6);
+  ck_assert_ldouble_nan(mu_sqrt(-MU_EPS6));
   ck_assert_ldouble_nan(mu_sqrt(MU_NAN));
   ck_assert_ldouble_nan(mu_sqrt(MU_INF));
   ck_assert_ldouble_nan(mu_sqrt(-MU_INF));
@@ -302,33 +276,8 @@ START_TEST(test_mu_sqrt) {
 END_TEST
 
 START_TEST(test_mu_pow) {
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(1, 40);
-    double y = rand_double(-5, 5);
-    ck_assert_ldouble_eq_tol(mu_pow(x, y), pow(x, y), MU_EPS6);
-  }
-
-  for (int i = 0; i < 10; ++i) {
-    double x = rand_double(-10, -1);
-    ck_assert_ldouble_eq_tol(mu_pow(x, i), pow(x, i), MU_EPS6);
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-40, -1);
-    double y = rand_double(-5, 5);
-    ck_assert_ldouble_nan(mu_pow(x, y));
-  }
-
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq_tol(mu_pow(test_cases[i], i), pow(test_cases[i], i),
-                             MU_EPS6);
-    ck_assert_ldouble_eq_tol(mu_pow(i, test_cases[i]), pow(i, test_cases[i]),
-                             MU_EPS6);
-    if (test_cases[i] > MU_EPS6) {
-      ck_assert_ldouble_eq_tol(mu_pow(test_cases[i], test_cases[i]),
-                               pow(test_cases[i], test_cases[i]), MU_EPS6);
-    }
-  }
+  run_const_tests_2args(mu_pow, pow, MU_EPS6);
+  run_random_tests_2args(mu_pow, pow, 1, 40, -5, 5, MU_EPS6);
 
   ck_assert_ldouble_eq(mu_pow(-MU_INF, -MU_INF), pow(-MU_INF, -MU_INF));
   ck_assert_ldouble_eq(mu_pow(-MU_INF, -10.0), pow(-MU_INF, -10.0));
@@ -337,6 +286,7 @@ START_TEST(test_mu_pow) {
   ck_assert_ldouble_eq(mu_pow(-MU_INF, 0.0), pow(-MU_INF, 0.0));
   ck_assert_ldouble_eq(mu_pow(-MU_INF, 0.1), pow(-MU_INF, 0.1));
   ck_assert_ldouble_eq(mu_pow(-MU_INF, 1.0), pow(-MU_INF, 1.0));
+  ck_assert_ldouble_eq(mu_pow(-MU_INF, 9.0), pow(-MU_INF, 9.0));
   ck_assert_ldouble_eq(mu_pow(-MU_INF, 10.0), pow(-MU_INF, 10.0));
   ck_assert_ldouble_eq(mu_pow(-MU_INF, MU_INF), pow(-MU_INF, MU_INF));
   ck_assert_ldouble_nan(mu_pow(-MU_INF, MU_NAN));
@@ -348,6 +298,7 @@ START_TEST(test_mu_pow) {
   ck_assert_ldouble_eq_tol(mu_pow(-10.0, 0.0), pow(-10.0, 0.0), MU_EPS6);
   ck_assert_ldouble_nan(mu_pow(-10.0, 0.1));
   ck_assert_ldouble_eq_tol(mu_pow(-10.0, 1.0), pow(-10.0, 1.0), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_pow(-10.0, 9.0), pow(-10.0, 9.0), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_pow(-10.0, 10.0), pow(-10.0, 10.0), MU_EPS6);
   ck_assert_ldouble_eq(mu_pow(-10.0, MU_INF), pow(-10.0, MU_INF));
   ck_assert_ldouble_nan(mu_pow(-10.0, MU_NAN));
@@ -359,6 +310,7 @@ START_TEST(test_mu_pow) {
   ck_assert_ldouble_eq_tol(mu_pow(-1.0, 0.0), pow(-1.0, 0.0), MU_EPS6);
   ck_assert_ldouble_nan(mu_pow(-1.0, 0.1));
   ck_assert_ldouble_eq_tol(mu_pow(-1.0, 1.0), pow(-1.0, 1.0), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_pow(-1.0, 9.0), pow(-1.0, 9.0), MU_EPS6);
   ck_assert_ldouble_eq_tol(mu_pow(-1.0, 10.0), pow(-1.0, 10.0), MU_EPS6);
   ck_assert_ldouble_eq(mu_pow(-1.0, MU_INF), pow(-1.0, MU_INF));
   ck_assert_ldouble_nan(mu_pow(-1.0, MU_NAN));
@@ -370,6 +322,7 @@ START_TEST(test_mu_pow) {
   ck_assert_ldouble_eq_tol(mu_pow(-0.1, 0.0), pow(-0.1, 0.0), MU_EPS6);
   ck_assert_ldouble_nan(mu_pow(-0.1, 0.1));
   ck_assert_ldouble_eq_tol(mu_pow(-0.1, 1.0), pow(-0.1, 1.0), MU_EPS6);
+  ck_assert_ldouble_eq_tol(mu_pow(-0.1, 9.0), pow(-0.1, 9.0), MU_EPS10);
   ck_assert_ldouble_eq_tol(mu_pow(-0.1, 10.0), pow(-0.1, 10.0), MU_EPS10);
   ck_assert_ldouble_eq(mu_pow(-0.1, MU_INF), pow(-0.1, MU_INF));
   ck_assert_ldouble_nan(mu_pow(-0.1, MU_NAN));
@@ -443,19 +396,9 @@ START_TEST(test_mu_pow) {
 END_TEST
 
 START_TEST(test_mu_exp) {
-  for (double x = -100.0; x < 20.0; x += 0.1) {
-    ck_assert_ldouble_eq_tol(mu_exp(x), exp(x), MU_EPS6);
-  }
-
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    ck_assert_ldouble_eq_tol(mu_exp(test_cases[i]), exp(test_cases[i]),
-                             MU_EPS6);
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-50, 20);
-    ck_assert_ldouble_eq_tol(mu_exp(x), exp(x), MU_EPS6);
-  }
+  run_range_tests(mu_exp, exp, -100.0, 20.0, 0.1, MU_EPS6);
+  run_const_tests(mu_exp, exp, MU_EPS6);
+  run_random_tests(mu_exp, exp, -50.0, 20, MU_EPS6);
 
   ck_assert_ldouble_nan(mu_exp(MU_NAN));
   ck_assert_ldouble_eq(mu_exp(MU_INF), exp(MU_INF));
@@ -464,26 +407,11 @@ START_TEST(test_mu_exp) {
 END_TEST
 
 START_TEST(test_mu_log) {
-  for (double x = 0.01; x < 2.0; x += 0.01) {
-    ck_assert_ldouble_eq_tol(mu_log(x), log(x), MU_EPS6);
-  }
+  run_range_tests(mu_log, log, 0.01, 2.0, 0.01, MU_EPS6);
+  run_const_tests(mu_log, log, MU_EPS6);
+  run_random_tests(mu_log, log, MU_EPS20, MU_E10, MU_EPS6);
 
-  for (size_t i = 0; i < sizeof(test_cases) / sizeof(test_cases[0]); ++i) {
-    if (test_cases[i] > MU_EPS20)
-      ck_assert_ldouble_eq_tol(mu_log(test_cases[i]), log(test_cases[i]),
-                               MU_EPS6);
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(MU_EPS20, MU_E10);
-    ck_assert_ldouble_eq_tol(mu_log(x), log(x), MU_EPS6);
-  }
-
-  for (int i = 0; i < 1000; ++i) {
-    double x = rand_double(-MU_E10, -MU_EPS20);
-    ck_assert_ldouble_nan(mu_log(x));
-  }
-
+  ck_assert_ldouble_nan(mu_log(-MU_EPS6));
   ck_assert_ldouble_nan(mu_log(MU_NAN));
   ck_assert_ldouble_nan(mu_log(-MU_INF));
   ck_assert_ldouble_eq(mu_log(0.0), log(0.0));
@@ -521,7 +449,6 @@ Suite *math_utils_suite(void) {
 }
 
 int main(void) {
-  init_random();
   int failed = 0;
   Suite *suite;
 
