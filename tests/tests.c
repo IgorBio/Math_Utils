@@ -29,7 +29,7 @@ void run_random_tests(long double (*mu_func)(double),
                       double tolerance) {
   srand((unsigned int)time(NULL));
   for (int i = 0; i < 1000; ++i) {
-    double x = low + (double)random() / RAND_MAX * (high - low);
+    double x = low + (double)rand() / RAND_MAX * (high - low);
     ck_assert_ldouble_eq_tol(mu_func(x), std_func(x), tolerance);
   }
 }
@@ -55,8 +55,8 @@ void run_random_tests_2args(long double (*mu_func)(double, double),
                             double tolerance) {
   srand((unsigned int)time(NULL));
   for (int i = 0; i < 1000; ++i) {
-    double x = low1 + (double)random() / RAND_MAX * (high1 - low1);
-    double y = low2 + (double)random() / RAND_MAX * (high2 - low2);
+    double x = low1 + (double)rand() / RAND_MAX * (high1 - low1);
+    double y = low2 + (double)rand() / RAND_MAX * (high2 - low2);
     ck_assert_ldouble_eq_tol(mu_func(x, y), std_func(x, y), tolerance);
   }
 }
